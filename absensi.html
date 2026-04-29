@@ -178,6 +178,21 @@
     }
 
     await Promise.all([loadUpcoming(), loadHistory(), loadStats()]);
+
+    // Refresh data saat halaman kembali fokus (misal balik dari tab lain)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        loadUpcoming();
+        loadHistory();
+        loadStats();
+      }
+    });
+
+    // Refresh otomatis setiap 30 detik
+    setInterval(() => {
+      loadUpcoming();
+      loadStats();
+    }, 30000);
   }
 
   async function loadStats() {
@@ -264,7 +279,10 @@
             </div>
           </div>
           <div>
-            ${myStatus ? `<span class="status-badge badge-${myStatus}">${myStatus}</span>`
+            ${myStatus === 'hadir'  ? `<span class="status-badge badge-hadir">Hadir ✓</span>`
+              : myStatus === 'pending' ? `<span class="status-badge badge-pending"
+                  style="background:#f3e5f5;color:#7b1fa2">Menunggu Konfirmasi ⏳</span>`
+              : myStatus ? `<span class="status-badge badge-${myStatus}">${myStatus}</span>`
               : hasLeave ? `<span class="status-badge badge-izin">Izin</span>`
               : s.checkin_open ? `<button class="btn btn-primary btn-sm"
                   onclick="openCheckinModal('${s.id}','${s.title.replace(/'/g,"\\'")}')">
@@ -281,41 +299,66 @@
     const from  = month + '-01';
     const to    = month + '-31';
 
-    const { data } = await getSupabase()
-      .from('attendance')
-      .select('*, sessions(title,date,type,location)')
-      .eq('user_id', profile.id)
-      .gte('sessions.date', from)
-      .lte('sessions.date', to)
-      .order('sessions(date)', { ascending: false });
+    // Ambil session IDs dulu untuk bulan ini
+    const { data: sessions } = await getSupabase()
+      .from('sessions')
+      .select('id, title, date, type, location')
+      .gte('date', from)
+      .lte('date', to);
 
-    const el = document.getElementById('attendance-history');
-    if (!data || data.length === 0) {
-      el.innerHTML = `<div class="empty-state">
-        <div class="empty-icon">📋</div>
-        <div class="empty-text">Tidak ada data bulan ini</div>
-      </div>`;
+    if (!sessions || sessions.length === 0) {
+      document.getElementById('attendance-history').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-text">Tidak ada sesi bulan ini</div>
+        </div>`;
       return;
     }
 
-    el.innerHTML = data.map(a => `
-      <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;
-        display:flex;align-items:center;gap:10px">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:500">
-            ${a.sessions?.title || '—'}
+    const sessionIds = sessions.map(s => s.id);
+    const sessionMap = {};
+    sessions.forEach(s => sessionMap[s.id] = s);
+
+    // Ambil attendance untuk session IDs ini
+    const { data: attendances } = await getSupabase()
+      .from('attendance')
+      .select('*')
+      .eq('user_id', profile.id)
+      .in('session_id', sessionIds);
+
+    const attendMap = {};
+    (attendances || []).forEach(a => attendMap[a.session_id] = a);
+
+    const el = document.getElementById('attendance-history');
+    // Tampilkan semua sesi bulan ini + status kehadiran
+    el.innerHTML = sessions
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .map(s => {
+        const a = attendMap[s.id];
+        const status = a?.status || 'belum';
+        return `
+        <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;
+          display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${s.title}</div>
+            <div style="font-size:12px;color:#888">
+              ${formatDateOnly(s.date)}
+              ${a?.check_in_time
+                ? ' · ' + new Date(a.check_in_time).toLocaleTimeString('id-ID',
+                    {hour:'2-digit',minute:'2-digit'})
+                : ''}
+            </div>
+            ${status === 'hadir' && a?.method === 'app' ? `
+              <div style="font-size:11px;color:#e65100;margin-top:2px">
+                ⏳ Menunggu konfirmasi admin
+              </div>` : ''}
           </div>
-          <div style="font-size:12px;color:#888">
-            ${formatDateOnly(a.sessions?.date)}
-            ${a.check_in_time
-              ? ' · ' + new Date(a.check_in_time).toLocaleTimeString('id-ID',
-                  {hour:'2-digit',minute:'2-digit'})
-              : ''}
-          </div>
-        </div>
-        <span class="status-badge badge-${a.status}">${a.status}</span>
-      </div>
-    `).join('');
+          <span class="status-badge badge-${status === 'belum' ? 'alpha' : status}"
+            style="${status === 'belum' ? 'opacity:0.4' : ''}">
+            ${status === 'belum' ? '—' : status}
+          </span>
+        </div>`;
+      }).join('');
   }
 
   // ---- Check-in via app ----
@@ -345,17 +388,17 @@
         .insert({
           session_id:    checkinTarget,
           user_id:       profile.id,
-          status:        'hadir',
+          status:        'pending',   // perlu validasi admin
           check_in_time: new Date().toISOString(),
           method:        'app',
         });
       if (error) throw error;
-      showToast('Check-in berhasil!', 'success');
+      showToast('Permintaan hadir terkirim! Menunggu konfirmasi admin.', 'success');
       closeCheckinModal();
       await Promise.all([loadUpcoming(), loadStats()]);
     } catch(err) {
       errEl.textContent   = err.message.includes('unique')
-        ? 'Kamu sudah check-in di sesi ini.' : err.message;
+        ? 'Kamu sudah mengajukan kehadiran di sesi ini.' : err.message;
       errEl.style.display = 'block';
     } finally {
       setLoading(btn, false, '✓ Konfirmasi Hadir');
