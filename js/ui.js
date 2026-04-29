@@ -125,6 +125,7 @@ function typeBadge(type) {
   const map = {
     kas:        { label:'Kas Bulanan', color:'#1565c0', bg:'#e3f2fd' },
     reimburse:  { label:'Reimburse',   color:'#6a1b9a', bg:'#f3e5f5' },
+    donasi:     { label:'Donasi',      color:'#0f6e56', bg:'#e1f5ee' },
     pengeluaran:{ label:'Pengeluaran', color:'#c62828', bg:'#ffebee' },
     pemasukan:  { label:'Pemasukan',   color:'#2e7d32', bg:'#e8f5e9' },
     transfer:   { label:'Transfer',    color:'#e65100', bg:'#fff3e0' },
@@ -138,19 +139,20 @@ function typeBadge(type) {
 // ---- Navbar render ----
 function renderNavbar(profile, activePage) {
   const isAdmin = profile?.role === 'admin';
+  const BASE_FINANCE = 'https://olittleharmony.github.io/lho-finance/pages/';
+  const BASE_ATTEND  = 'https://olittleharmony.github.io/lho-attendance/';
+  const HUB_URL      = 'https://olittleharmony.github.io/member/hub.html';
+
   const memberLinks = [
-    { href:'dashboard.html',  label:'Dashboard', id:'dashboard' },
-    { href:'kas.html',        label:'Bayar Kas',  id:'kas' },
-    { href:'reimburse.html',  label:'Reimburse',  id:'reimburse' },
-    { href:'riwayat.html',    label:'Riwayat',    id:'riwayat' },
+    { href: BASE_ATTEND  + 'absensi.html',         label:'Absensi',   id:'absensi' },
+    { href: BASE_FINANCE + 'dashboard.html',        label:'Keuangan',  id:'dashboard' },
+    { href: HUB_URL,                                label:'Menu Utama', id:'hub' },
   ];
   const adminLinks = [
-    { href:'admin-dashboard.html', label:'Dashboard',  id:'admin-dashboard' },
-    { href:'admin-validasi.html',  label:'Validasi',   id:'admin-validasi' },
-    { href:'admin-transaksi.html', label:'Transaksi',  id:'admin-transaksi' },
-    { href:'admin-laporan.html',   label:'Laporan',    id:'admin-laporan' },
-    { href:'admin-member.html',    label:'Member',     id:'admin-member' },
-    { href:'admin-setting.html',   label:'Pengaturan', id:'admin-setting' },
+    { href: BASE_ATTEND  + 'absensi.html',              label:'Absensi',    id:'absensi' },
+    { href: BASE_FINANCE + 'admin-dashboard.html',      label:'Keuangan',   id:'admin-dashboard' },
+    { href: BASE_FINANCE + 'admin-attend.html',         label:'Kelola Absensi', id:'admin-attend' },
+    { href: HUB_URL,                                    label:'Menu Utama', id:'hub' },
   ];
   const links = isAdmin ? adminLinks : memberLinks;
 
