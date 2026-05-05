@@ -4,6 +4,6 @@ const APP_CONFIG = {
   GAS_URL:           'https://script.google.com/macros/s/AKfycbwplBjReoLeOI5I2bzkUjQMZfK6Yc5CKyywm8-yFhyV6vQJD66nWIS7lpo88ujum6o0/exec',
   APP_NAME:          'LHO Absensi',
   ORG_NAME:          'Little Harmony Orchestra',
-  APP_URL:           'https://olittleharmony.github.io/lho-attendance',
+  APP_URL:           'https://littleharmonyorchestra.com/lho-attendance',
 };
 Object.freeze(APP_CONFIG);
