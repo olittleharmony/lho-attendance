@@ -39,7 +39,7 @@ async function signIn(email, password) {
 
 async function signOut() {
   await getSupabase().auth.signOut();
-  const loginUrl = 'https://olittleharmony.github.io/member/index.html';
+  const loginUrl = 'https://littleharmonyorchestra.com/member/index.html';
   if (!window.location.href.includes('member/index.html')) {
     window.location.href = loginUrl;
   }
@@ -62,7 +62,7 @@ function isOpsAdmin(profile) {
 // ---- Guard: redirect ke login jika belum login ----
 async function requireAuth(requiredRole = null) {
   const profile = await getCurrentProfile();
-  const loginUrl = 'https://olittleharmony.github.io/member/index.html';
+  const loginUrl = 'https://littleharmonyorchestra.com/member/index.html';
   const currentHref = window.location.href;
   const isLoginPage = currentHref.includes('member/index.html');
   const isAttendancePage = currentHref.includes('lho-attendance');
@@ -82,7 +82,7 @@ async function requireAuth(requiredRole = null) {
     const isAdminPage = window.location.pathname.includes('admin-');
     if (!isAdminPage && !isAttendancePage) {
       window.location.href =
-        'https://olittleharmony.github.io/lho-finance/pages/admin-dashboard.html';
+        'https://littleharmonyorchestra.com/lho-finance/pages/admin-dashboard.html';
       return null;
     }
     return profile;
@@ -92,7 +92,7 @@ async function requireAuth(requiredRole = null) {
   if (isAttendancePage) return profile;
 
   if (requiredRole && profile.role !== requiredRole) {
-    window.location.href = 'https://olittleharmony.github.io/member/hub.html';
+    window.location.href = 'https://littleharmonyorchestra.com/member/hub.html';
     return null;
   }
   return profile;
