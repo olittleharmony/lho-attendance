@@ -59,13 +59,24 @@ function isOpsAdmin(profile) {
   return profile?.email?.toLowerCase() === OPS_ADMIN_EMAIL.toLowerCase();
 }
 
+// ---- Role helpers ----
+function isAdmin(profile)     { return profile?.role === 'admin'; }
+function isSuperAdmin(profile){ return profile?.role === 'superadmin'; }
+function isFinance(profile)   { return profile?.role === 'finance'; }
+function isHR(profile)        { return profile?.role === 'hr'; }
+function isPelatih(profile)   { return profile?.role === 'pelatih'; }
+function isPengurus(profile)  { return profile?.role === 'pengurus'; }
+function isStaff(profile) {
+  return ['admin','superadmin','hr','finance','pelatih','pengurus']
+    .includes(profile?.role);
+}
+
 // ---- Guard: redirect ke login jika belum login ----
 async function requireAuth(requiredRole = null) {
   const profile = await getCurrentProfile();
   const loginUrl = 'https://littleharmonyorchestra.com/member/index.html';
   const currentHref = window.location.href;
   const isLoginPage = currentHref.includes('member/index.html');
-  const isAttendancePage = currentHref.includes('lho-attendance');
 
   if (!profile) {
     if (!isLoginPage) window.location.href = loginUrl;
@@ -77,24 +88,8 @@ async function requireAuth(requiredRole = null) {
     return null;
   }
 
-  // Akun ops admin → hanya boleh akses halaman admin (bukan attendance/member)
-  if (isOpsAdmin(profile)) {
-    const isAdminPage = window.location.pathname.includes('admin-');
-    if (!isAdminPage && !isAttendancePage) {
-      window.location.href =
-        'https://littleharmonyorchestra.com/lho-finance/pages/admin-dashboard.html';
-      return null;
-    }
-    return profile;
-  }
-
-  // Halaman attendance boleh diakses semua role tanpa restriction
-  if (isAttendancePage) return profile;
-
-  if (requiredRole && profile.role !== requiredRole) {
-    window.location.href = 'https://littleharmonyorchestra.com/member/hub.html';
-    return null;
-  }
+  // Semua role boleh akses halaman attendance
+  // Role tambahan hanya MENAMBAH akses, tidak mengurangi akses member
   return profile;
 }
 
