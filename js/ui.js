@@ -139,9 +139,9 @@ function typeBadge(type) {
 // ---- Navbar render ----
 function renderNavbar(profile, activePage) {
   const isAdmin = profile?.role === 'admin';
-  const BASE_FINANCE = 'https://olittleharmony.github.io/lho-finance/pages/';
-  const BASE_ATTEND  = 'https://olittleharmony.github.io/lho-attendance/';
-  const HUB_URL      = 'https://olittleharmony.github.io/member/hub.html';
+  const BASE_FINANCE = 'https://littleharmonyorchestra.com/lho-finance/pages/';
+  const BASE_ATTEND  = 'https://littleharmonyorchestra.com/lho-attendance/';
+  const HUB_URL      = 'https://littleharmonyorchestra.com/member/hub.html';
 
   const memberLinks = [
     { href: BASE_ATTEND  + 'absensi.html',         label:'Absensi',   id:'absensi' },
